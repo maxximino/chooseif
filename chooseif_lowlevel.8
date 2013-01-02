@@ -1,0 +1,67 @@
+.TH "chooseif_lowlevel" "8" "June 2011"
+.SH "NAME"
+.br
+\fBchooseif_lowlevel\fP \- sets up \fBxt_CHOOSEIF\fP list of interfaces.
+.br
+.SH "SYNOPSIS"
+\fBchooseif_lowlevel -a\fP [ifname] [inputcounter] [outputcounter] [max_input_rate] [max_output_rate] [cost] [fwmark]
+.br
+\fBchooseif_lowlevel -d\fP [ifname] [fwmark]
+.br
+\fBchooseif_lowlevel -l\fP [raw]
+.br
+\fBchooseif_lowlevel -h\fP
+.SH "DESCRIPTION"
+This is a program to manipulate \fBxt_CHOOSEIF\fP list of known interface and their parameters that is 
+designed to be used by scripts.
+.BR chooseif (8)
+script is bundled with the package.
+.SH "OPTIONS"
+.IP -a
+Adds an interface to \fBxt_CHOOSEIF\fP list. It expects 7 parameters:
+.RS
+.RS
+# Interface name
+.br
+# Name of \fBRATEEST\fP counter of traffic incoming into the interface
+.br
+# Name of \fBRATEEST\fP counter of traffic outgoing from the interface
+.br
+# Maximum interface traffic input rate in kbps (kilobytes per second)
+.br
+# Maximum interface traffic output rate in kbps (kilobytes per second)
+.br
+# Cost of the traffic going through the interface, relative to other interfaces.
+.br
+# Netfilter's fwmark to apply to packets initiating a new connection that should go through this interface.
+.RE
+.RE
+.IP -d 
+Removes an interface from \fBxt_CHOOSEIF\fP list. It expects 2 parameters:
+.RS
+.RS
+# Interface name
+.br
+# Fwmark applied to connections sent to this interface.
+.RE
+.RE
+.IP -l [\fBraw\fP]
+Lists interfaces known by \fBxt_CHOOSEIF\fP with all of their parameters.
+If you supply the optional parameter raw the output is uglier but easier to parse (simply tab delimited without headers)
+.IP -h
+Show help.
+.SH "EXIT STATUS"
+Returns 0 if the operation was successfully acknowledged by the kernel.
+.SH EXAMPLES
+.IP "\fBchooseif_lowlevel -a\fP eth0 eth0_i eth0_o 80 32 100 1002"
+Interface eth0 connected to a typical old ADSL ethernet modem with 640kbit/s dw / 256kbit/s up speed, interface cost 100 and netfilter's fwmark of 1002.
+Assumes existing \fBRATEEST\fP counters eth0_i and eth0_o being counters of all inbound/outbound traffic from/to eth0.
+.IP "\fBchooseif_lowlevel -d\fP eth0 1002"
+Removes interface eth0 with fwmark 1002 from \fBxt_CHOOSEIF\fP list of interfaces.
+.SH "SEE ALSO"
+.BR chooseif (8)
+,
+.BR iptables (8)
+for \fBRATEEST\fP
+.SH AUTHORS
+Massimo Maggi<massimo@mmmm.it> and Giovanni Matteo Fumarola <giovanni.fumarola@gmail.com>

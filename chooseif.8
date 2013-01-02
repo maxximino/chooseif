@@ -1,0 +1,106 @@
+.TH "chooseif" "8" "June 2011"
+.SH "NAME"
+.br
+.B chooseif
+\- sets up \fBxt_CHOOSEIF\fP list of interfaces in a user-friendly way.
+.SH "SYNOPSIS"
+.br
+\fBchooseif -a\fP [ifname] [max_input_rate] [max_output_rate] [cost] [gateway] 
+.br
+\fBchooseif -d\fP [ifname] 
+.br
+\fBchooseif -l\fP
+.br
+\fBchooseif -h\fP
+.SH "DESCRIPTION"
+This is a script able to configure \fBxt_CHOOSEIF\fP (with co-operation of some other Linux's kernel networking features)
+to route each new outgoing connection through the interface with the least amount of traffic.
+It is really useful when you have more than one ISP connected to the same machine.
+\fBxt_CHOOSEIF\fP is an iptables target in mangle table, to be used in PREROUTING and OUTPUT chains.
+When a new connection is started, for each interface in the list, it calculates a coefficient:
+.RS
+input_load= input_traffic / max_input_rate
+.br
+output_load= output_traffic / max_output_rate
+.br
+load=max(input_load,output_load)
+.br
+coefficient= weight_loadcost * square_root(load * cost) + weight_load * load + weight_cost * cost
+.RE
+and chooses the interface with the lowest coefficient.
+.br
+.br
+.SB NOTE:
+weight_* parameters are tunable as module parameters or in \fB/sys/module/xt_CHOOSEIF/parameters/\fP .
+.br
+.br
+Then it applies the netfilter mark of the corresponding interface to that packet and following ones and packets in related connections.
+.br
+Linux routing policy database can be used to assign a different routing table to packets distinguishing them from the netfilter mark.
+.br
+This script takes care of following steps:
+.RS
+.br
+# Inserting the module
+.br
+# Inserting iptables rules to call the target
+.br
+# Generate an unused netfilter mark value (counting starts from 1000)
+.br
+# Create different routing table  for each interface added.
+.br
+# Insert default route in each routing table.
+.br
+# Set up the rule to associate the netfilter mark to the routing table.
+.br
+# Create two \fBRATEEST\fP counters (input,output) for each interface added.
+.br
+# Call chooseif_lowlevel to set up the in-kernel \fBxt_CHOOSEIF\fP's list of interfaces.
+.RE
+.SH "IMPORTANT NOTICE"
+You should disable the reverse path filter for interfaces added to the list.
+.RE 
+\fBecho 0 >/proc/sys/net/ipv4/conf/all/rp_filter\fP
+.br
+\fBecho 0 >/proc/sys/net/ipv4/conf/\fP\fIinterface_name\fP\fB/rp_filter\fP
+.br
+This script DOESN'T set this parameter.
+.br
+Some distributions, like Ubuntu, have this parameter set as a default.
+.SH "OPTIONS"
+.IP -a
+Adds an interface to \fBxt_CHOOSEIF\fP list. It expects 5 parameters:
+.RS
+.RS
+# Interface name
+.br
+# Maximum interface traffic input rate in kbps (kilobytes per second)
+.br
+# Maximum interface traffic output rate in kbps (kilobytes per second)
+.br
+# Cost of the traffic going through the interface, relative to other interfaces.
+.br
+# Default gateway to add to the routing table related to traffic that should go out through this interface.
+.RE
+.RE
+.IP -d 
+Removes an interface from \fBxt_CHOOSEIF\fP list. It expects 1 parameter: Interface name
+.IP -l
+Lists interfaces considered by this script
+.IP -h
+Shows help.
+.SH "EXAMPLES"
+.IP "\fBchooseif -a\fP eth0 80 32 100 192.168.0.1"
+Interface eth0 connected to a typical old ADSL ethernet modem with 640kbit/s dw / 256kbit/s up speed, interface cost 100 and default route through 192.168.0.1
+.IP "\fBchooseif -d\fP eth0"
+Removes interface eth0 from \fBxt_CHOOSEIF\fP list of interfaces, 'its' routing table and \fBRATEEST\fP counters.
+.IP "\fBchooseif -l\fP"
+Shows current status.
+.SH "SEE ALSO"
+.BR chooseif (8)
+,
+.BR iptables (8)
+for \fBRATEEST\fP, 
+.BR ip (8)
+.SH "AUTHORS"
+Massimo Maggi<massimo@mmmm.it> and Giovanni Matteo Fumarola <giovanni.fumarola@gmail.com>

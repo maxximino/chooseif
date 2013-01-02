@@ -1,0 +1,5 @@
+Prerequesities: Kernel headers, headers of libcap.
+To build it, simply type 'make'.
+To install it, type 'make install' as root user.
+Then you can see documentation typing 'man chooseif'.
+
